@@ -30,7 +30,6 @@ taskForm.addEventListener('submit', e => {
 });
 
 function buildPage(taskArr) {
-    listContainer.replaceChildren();
     taskArr.forEach( task => {
 	const taskContainer = document.createElement('div');
 	
@@ -91,5 +90,7 @@ function taskDeleteBtn(task) {
 }
 
 function renderPage() {
-    buildPage(tasks)
+    listContainer.replaceChildren();
+    buildPage(tasks.filter(t => !t.complete));
+    buildPage(tasks.filter(t => t.complete));
 };
