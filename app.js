@@ -8,7 +8,12 @@ console.log(`
     listContainer: ${listContainer}
     `);
 
-let tasks = [];
+let tasks = JSON.parse(localStorage.getItem("tasks"));
+if(!tasks) {
+    tasks = [];
+} else {
+    renderPage();
+}
 
 taskForm.addEventListener('submit', e => {
     e.preventDefault();
@@ -90,7 +95,8 @@ function taskDeleteBtn(task) {
 }
 
 function renderPage() {
-    listContainer.replaceChildren();
+    listContainer.replaceChildren();//clear page
     buildPage(tasks.filter(t => !t.complete));
     buildPage(tasks.filter(t => t.complete));
+    localStorage.setItem("tasks", JSON.stringify(tasks));
 };
