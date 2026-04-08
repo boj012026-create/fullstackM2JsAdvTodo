@@ -1,6 +1,7 @@
 const taskForm = document.getElementById("task-form");
 const taskInput = document.getElementById("task-input");
 const listContainer = document.getElementById("list-container");
+const showCompleted = document.getElementById("show-completed");
 
 console.log(`
     taskForm: ${taskForm}
@@ -8,12 +9,15 @@ console.log(`
     listContainer: ${listContainer}
     `);
 
-let tasks = JSON.parse(localStorage.getItem("tasks"));
-if(!tasks) {
-    tasks = [];
-} else {
-    renderPage();
-}
+
+let filters = {showCompleted: false};
+
+let tasks = [];
+
+showCompleted.addEventListener('change', e => {
+   filters.showCompleted = e.target.checked;
+   renderPage(); 
+});
 
 taskForm.addEventListener('submit', e => {
     e.preventDefault();
@@ -31,25 +35,29 @@ taskForm.addEventListener('submit', e => {
 	complete: false
     });
     taskInput.value = "";
+    saveTasksToStorage();
     renderPage();
 });
 
 function buildPage(taskArr) {
+    listContainer.replaceChildren();//clear page
     taskArr.forEach( task => {
 	const taskContainer = document.createElement('div');
 	
-	const taskName = document.createElement('p');
-	taskName.textContent = task.task;
+	const taskName = document.createElement('input');
+	taskName.classList.add('edit-button');
+	taskName.readOnly = true;
+	taskName.value = task.task;
+	
 	if(task.complete) {
 	    taskContainer.classList.add("checked");
 	} else {
 	    taskContainer.classList.remove("checked");
-
 	}
 
 	taskContainer.append(completeTaskInput(task));
 	taskContainer.append(taskName);
-	taskContainer.append(taskEditBtn(task));
+	taskContainer.append(taskEditBtn(task, taskName));
 	taskContainer.append(taskDeleteBtn(task));
 	
 
@@ -65,19 +73,22 @@ function completeTaskInput(task) {
     
     inputElement.addEventListener('change', e => {
 	task.complete = e.target.checked;
+	saveTasksToStorage();
 	renderPage();
     });
     
     return inputElement;
 }
 
-function taskEditBtn(task) {
+function taskEditBtn(task, taskName) {
     const editBtn = document.createElement('button');
-    editBtn.textContent = "edit";
+    editBtn.textContent = "Edit";
 
-    editBtn.addEventListener("click", e => {
-	task.task = prompt("edit", task.task);
-	renderPage();
+    editBtn.addEventListener("click", () => {
+	taskName.readOnly = !taskName.readOnly;
+	editBtn.textContent = taskName.readOnly ? "Edit": "Save";
+	task.task = taskName.value;
+	saveTasksToStorage();
     });
     return editBtn;
 }
@@ -86,17 +97,32 @@ function taskDeleteBtn(task) {
     const delBtn = document.createElement('button');
     delBtn.textContent = "delete";
 
-    delBtn.addEventListener('click', e => {
+    delBtn.addEventListener('click', () => {
 	let index = tasks.indexOf(task);
-	tasks.splice(index, 1);
+	if (0 <= index) { 
+	    tasks.splice(index, 1);
+	}
+	saveTasksToStorage();
 	renderPage();
     });
     return delBtn;
 }
 
-function renderPage() {
-    listContainer.replaceChildren();//clear page
-    buildPage(tasks.filter(t => !t.complete));
-    buildPage(tasks.filter(t => t.complete));
+function filterTaskArr(taskArr) {
+    return taskArr.filter(task => filters.showCompleted || !task.complete)
+}
+
+function saveTasksToStorage() {
     localStorage.setItem("tasks", JSON.stringify(tasks));
+}
+
+function renderPage() {
+    const storedTasks = JSON.parse(localStorage.getItem("tasks"));
+    if (storedTasks) {
+	tasks = storedTasks;
+    }
+    buildPage(filterTaskArr(tasks));
+    //localStorage.setItem("tasks", JSON.stringify(tasks));
 };
+
+renderPage();
