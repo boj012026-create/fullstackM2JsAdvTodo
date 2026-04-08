@@ -9,7 +9,6 @@ console.log(`
     listContainer: ${listContainer}
     `);
 
-
 let filters = {showCompleted: false};
 
 let tasks = [];
